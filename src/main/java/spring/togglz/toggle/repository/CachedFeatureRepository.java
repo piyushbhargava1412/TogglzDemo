@@ -1,6 +1,7 @@
 package spring.togglz.toggle.repository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import org.togglz.core.Feature;
@@ -14,6 +15,8 @@ public class CachedFeatureRepository {
 
   private final FeatureManager featureManager;
   private final RedisTemplate<String, Boolean> redisTemplate;
+
+  @Value("${spring.cache.redis.time-to-live}") Long timeToLive;
 
   private static final String FEATURE_TOGGLE_PREFIX = "feature_toggle:";
 
@@ -32,7 +35,8 @@ public class CachedFeatureRepository {
     }
     boolean isActive = featureManager.isActive(feature);
     log.info("Feature {} state from store is {}", feature.name(), isActive);
-    redisTemplate.opsForValue().set(cacheKey, isActive, Duration.ofSeconds(30));
+    log.info("Setting cache");
+    redisTemplate.opsForValue().set(cacheKey, isActive, Duration.ofSeconds(timeToLive));
     return isActive;
   }
 }
